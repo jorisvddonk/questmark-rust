@@ -3,6 +3,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::Hasher;
 use tzo;
+use tzo::vm::ForeignFunc;
 
 pub struct QuestVM {
     pub vm: tzo::vm::VM,
@@ -25,19 +26,25 @@ impl QuestVM {
             println!("\n{}\n", z.to_string());
         }
 
-        /*
         fn response(vm: &mut tzo::vm::VM, s: &mut QuestVM) {
             let a = vm.stack.pop().unwrap().as_number();
             let b = vm.stack.pop().unwrap().as_string();
             s.responses.insert(b, a as i64);
             //println!("\n{} {}\n", b, a);
         }
-        */
 
-        self.vm.registerForeignFunction("emit".to_string(), emit);
-        /*let callback2 = move || response;
-        self.vm
-            .registerForeignFunction("response".to_string(), callback2);*/
+        let emit_ff = ForeignFunc {
+            name: String::from("emit"),
+            func: emit,
+        };
+        self.vm.registerForeignFunction(emit_ff);
+
+        /*let response = ForeignFunc {
+            name: String::from("response"),
+            func: response,
+        };
+        self.vm.registerForeignFunction(response_ff);
+        */
     }
 
     pub fn load(&mut self, instructions: std::vec::Vec<serde_json::Value>) {
