@@ -33,14 +33,24 @@ impl QuestVM {
     }
 
     fn getresponse(vm: &mut tzo::vm::VM) {
-        for (k, v) in HASHMAP.lock().unwrap().drain() {
-            println!("\n> {}: {}\n", k, v);
-        }
-        let mut input = String::new();
-        stdin().read_line(&mut input).ok().expect("ERROR!");
-        let input: u32 = input.trim().parse().expect("Please type a number!");
+        let question = requestty::Question::select("input").message("Select your response:");
+        let mut choices_map: HashMap<usize, u32> = HashMap::new();
+        let mut choices: Vec<String> = std::vec::Vec::new();
 
-        vm.stack.push(tzo::vm::Value::Number(input as f64));
+        let mut i = 0;
+        for (k, v) in HASHMAP.lock().unwrap().drain() {
+            choices_map.insert(i, k);
+            i += 1;
+            choices.push(v);
+        }
+
+        let question = question.choices(choices);
+        let question = question.build();
+        let x = requestty::prompt_one(question);
+        let input = x.unwrap().as_list_item().unwrap().index;
+        let input = choices_map.get(&input).unwrap();
+
+        vm.stack.push(tzo::vm::Value::Number(*input as f64));
     }
 
     pub fn init(&mut self) {
