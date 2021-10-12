@@ -2,6 +2,8 @@ use serde_json;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::Hasher;
+use std::io::stdin;
+use std::sync::Mutex;
 use tzo;
 use tzo::vm::ForeignFunc;
 
@@ -10,14 +12,35 @@ pub struct QuestVM {
     pub responses: HashMap<String, i64>,
 }
 
+lazy_static! {
+    static ref HASHMAP: Mutex<HashMap<u32, String>> = Mutex::new(HashMap::new());
+}
+
 impl QuestVM {
     pub fn new() -> QuestVM {
-        let mut vm: tzo::vm::VM = tzo::vm::VM::new();
+        let vm: tzo::vm::VM = tzo::vm::VM::new();
 
         return QuestVM {
             vm: vm,
             responses: HashMap::new(),
         };
+    }
+
+    fn response(vm: &mut tzo::vm::VM) {
+        let a = vm.stack.pop().unwrap().as_number();
+        let b = vm.stack.pop().unwrap().as_string();
+        HASHMAP.lock().unwrap().insert(a as u32, b);
+    }
+
+    fn getresponse(vm: &mut tzo::vm::VM) {
+        for (k, v) in HASHMAP.lock().unwrap().drain() {
+            println!("\n> {}: {}\n", k, v);
+        }
+        let mut input = String::new();
+        stdin().read_line(&mut input).ok().expect("ERROR!");
+        let input: u32 = input.trim().parse().expect("Please type a number!");
+
+        vm.stack.push(tzo::vm::Value::Number(input as f64));
     }
 
     pub fn init(&mut self) {
@@ -26,25 +49,23 @@ impl QuestVM {
             println!("\n{}\n", z.to_string());
         }
 
-        fn response(vm: &mut tzo::vm::VM, s: &mut QuestVM) {
-            let a = vm.stack.pop().unwrap().as_number();
-            let b = vm.stack.pop().unwrap().as_string();
-            s.responses.insert(b, a as i64);
-            //println!("\n{} {}\n", b, a);
-        }
-
         let emit_ff = ForeignFunc {
             name: String::from("emit"),
             func: emit,
         };
         self.vm.registerForeignFunction(emit_ff);
 
-        /*let response = ForeignFunc {
+        let response_ff = ForeignFunc {
             name: String::from("response"),
-            func: response,
+            func: QuestVM::response,
         };
         self.vm.registerForeignFunction(response_ff);
-        */
+
+        let getresponse_ff = ForeignFunc {
+            name: String::from("getResponse"),
+            func: QuestVM::getresponse,
+        };
+        self.vm.registerForeignFunction(getresponse_ff);
     }
 
     pub fn load(&mut self, instructions: std::vec::Vec<serde_json::Value>) {

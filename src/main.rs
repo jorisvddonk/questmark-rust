@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 use questvm::QuestVM;
 use serde_json;
 use std::{collections::HashMap, fs};
