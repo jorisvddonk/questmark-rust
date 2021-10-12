@@ -1,8 +1,5 @@
 use serde_json;
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::hash::Hasher;
-use std::io::stdin;
 use std::sync::Mutex;
 use tzo;
 use tzo::vm::ForeignFunc;
@@ -58,24 +55,23 @@ impl QuestVM {
             let z = vm.stack.pop().unwrap();
             println!("\n{}\n", z.to_string());
         }
-
         let emit_ff = ForeignFunc {
             name: String::from("emit"),
             func: emit,
         };
-        self.vm.registerForeignFunction(emit_ff);
+        self.vm.register_foreign_function(emit_ff);
 
         let response_ff = ForeignFunc {
             name: String::from("response"),
             func: QuestVM::response,
         };
-        self.vm.registerForeignFunction(response_ff);
+        self.vm.register_foreign_function(response_ff);
 
         let getresponse_ff = ForeignFunc {
             name: String::from("getResponse"),
             func: QuestVM::getresponse,
         };
-        self.vm.registerForeignFunction(getresponse_ff);
+        self.vm.register_foreign_function(getresponse_ff);
     }
 
     pub fn load(&mut self, instructions: std::vec::Vec<serde_json::Value>) {

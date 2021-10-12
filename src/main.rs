@@ -3,8 +3,7 @@ extern crate lazy_static;
 
 use questvm::QuestVM;
 use serde_json;
-use std::{collections::HashMap, fs};
-use tzo;
+use std::fs;
 
 mod questvm;
 
@@ -28,14 +27,14 @@ fn main() {
         .as_object()
         .unwrap();
 
-    let mut questVM: QuestVM = QuestVM::new();
+    let mut quest_vm: QuestVM = QuestVM::new();
 
     for e in label_map {
         let k = e.0.as_str().to_string();
         let v = e.1.as_i64().unwrap();
-        questVM.vm.labels.insert(k, v);
+        quest_vm.vm.labels.insert(k, v);
     }
-    questVM.init();
-    questVM.load(instructions);
-    questVM.vm.run();
+    quest_vm.init();
+    quest_vm.load(instructions);
+    quest_vm.vm.run();
 }
