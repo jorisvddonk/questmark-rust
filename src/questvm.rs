@@ -30,6 +30,7 @@ impl QuestVM {
     }
 
     fn getresponse(vm: &mut tzo::vm::VM) {
+        vm.suspend();
         let question = requestty::Question::select("input").message("Select your response:");
         let mut choices_map: HashMap<usize, u32> = HashMap::new();
         let mut choices: Vec<String> = std::vec::Vec::new();
@@ -48,6 +49,7 @@ impl QuestVM {
         let input = choices_map.get(&input).unwrap();
 
         vm.stack.push(tzo::vm::Value::Number(*input as f64));
+        vm.resume(); // since this is a blocking function, we only resume (don't *run*). If this were to be async, we'd have to call run() here!
     }
 
     pub fn init(&mut self) {
